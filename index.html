@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Salas com Senha</title>
+    <script>
+        async function fetchSalasComSenha() {
+            try {
+                // Busca a lista de salas
+                let response = await fetch('https://www.gartik.com/lista_sala.php?x=&l=1');
+                let data = await response.text();
+                
+                // Extrai a parte "c" do JSON
+                let salas = JSON.parse(data.match(/"c":\[[^\]]+\]/)[0].replace('"c":', ''));
+
+                // Filtra as salas que possuem senha
+                let salasComSenha = salas.filter(sala => sala.s === 1);
+                
+                let listaSalas = document.getElementById('listaSalas');
+                listaSalas.innerHTML = ''; // Limpa a lista
+
+                for (let sala of salasComSenha) {
+                    // Busca a informação da senha da sala
+                    let roomInfoResponse = await fetch(`https://gartic.pics/r/roomInfo?&id=${sala.i}`);
+                    let roomInfoData = await roomInfoResponse.json();
+
+                    // Cria um link para a sala e exibe a senha
+                    let listItem = document.createElement('li');
+                    let salaLink = document.createElement('a');
+                    salaLink.href = `https://gartic.com.br/0${sala.i}`;
+                    salaLink.textContent = roomInfoData.nome;
+                    salaLink.target = "_blank"; // Abre o link em uma nova aba
+
+                    listItem.appendChild(salaLink);
+                    listItem.appendChild(document.createTextNode(` - Senha: ${roomInfoData.senha}`));
+                    listaSalas.appendChild(listItem);
+                }
+            } catch (error) {
+                console.error('Erro ao buscar as salas:', error);
+            }
+        }
+
+        window.onload = fetchSalasComSenha;
+    </script>
+</head>
+<body>
+    <h1>Lista de Salas com Senha</h1>
+    <ul id="listaSalas"></ul>
+    <button onclick="location.reload()">Atualizar</button>
+</body>
+</html>
